@@ -1,10 +1,13 @@
 cmake_minimum_required(VERSION 3.10)
 project(camera_module)
+
+# Set C++ standard to 11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Allow user to specify FlyCapture2 root path manually
 set(FLYCAPTURE2_ROOT "" CACHE PATH "Path to FlyCapture2 SDK root directory")
+
 # If the user hasn't specified the path, try to set a default one
 if(NOT FLYCAPTURE2_ROOT)
     if(WIN32)
@@ -38,20 +41,42 @@ endif()
 message(STATUS "FLYCAPTURE2_INCLUDE_DIR is: ${FLYCAPTURE2_INCLUDE_DIR}")
 message(STATUS "FLYCAPTURE2_LIBRARY_DIR is: ${FLYCAPTURE2_LIBRARY_DIR}")
 
-# Try to find the library
-find_library(FLYCAPTURE2_LIBRARY
-    NAMES FlyCapture2_v100  # Adjust to the appropriate version name if needed
-    PATHS "${FLYCAPTURE2_LIBRARY_DIR}"
-    NO_DEFAULT_PATH
-)
+# Ensure that the library directory exists
+if(NOT EXISTS "${FLYCAPTURE2_LIBRARY_DIR}")
+    message(FATAL_ERROR "Library directory does not exist: ${FLYCAPTURE2_LIBRARY_DIR}")
+endif()
 
+# Debug: List files in the library directory
+file(GLOB FLYCAPTURE2_LIBRARIES LIST_DIRECTORIES false RELATIVE "${FLYCAPTURE2_LIBRARY_DIR}" "*.so*")
+message(STATUS "Found libraries in ${FLYCAPTURE2_LIBRARY_DIR}: ${FLYCAPTURE2_LIBRARIES}")
+
+# Try to find the FlyCapture2 library in UNIX systems
+if(UNIX)
+    # Look for different possible library names (e.g., flycapture, flycapture2, etc.)
+    find_library(FLYCAPTURE2_LIBRARY
+        NAMES flycapture2 flycapture flycapture2_v100  # Adjust to the appropriate version name if needed
+        PATHS "${FLYCAPTURE2_LIBRARY_DIR}"
+        NO_DEFAULT_PATH
+    )
+elseif(WIN32)
+    # Windows-specific library finding (example, adjust for your exact version)
+    find_library(FLYCAPTURE2_LIBRARY
+        NAMES FlyCapture2_v100  # Adjust to the appropriate version name if needed
+        PATHS "${FLYCAPTURE2_LIBRARY_DIR}"
+        NO_DEFAULT_PATH
+    )
+else()
+    message(FATAL_ERROR "Unsupported platform")
+endif()
+
+# Check if the library was found
 if(NOT FLYCAPTURE2_LIBRARY)
     message(FATAL_ERROR "FlyCapture2 library not found in ${FLYCAPTURE2_LIBRARY_DIR}")
 else()
     message(STATUS "Found FlyCapture2 library: ${FLYCAPTURE2_LIBRARY}")
 endif()
 
-# Source files
+# Source files for the project
 add_executable(Main
     main.cpp
     stdafx.cpp
