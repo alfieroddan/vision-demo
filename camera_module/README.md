@@ -14,14 +14,16 @@ For the camera software, you can use whatever your camera suits. We need [FlyCap
 
 Then to install the SDK, follow [these steps](https://www.teledynevisionsolutions.com/en-gb/support/support-center/application-note/iis/getting-started-with-flycapture-2-and-arm/).
 
-
 ## Custom Software
 
-Build process:
+### Prerequisites
 
+- CMake
+
+Build process:
 Linux:
 ```
-cmake -DFLYCAPTURE2_ROOT=/opt/flycapture2 ..
+cmake -DFLYCAPTURE2_ROOT=/home/tay/Documents/flycapture.2.13.3.31_arm64 ..
 ```
 
 Windows:
