@@ -15,6 +15,21 @@ For the camera software, you can use whatever your camera suits. We need [FlyCap
 Then to install the SDK, follow [these steps](https://www.teledynevisionsolutions.com/en-gb/support/support-center/application-note/iis/getting-started-with-flycapture-2-and-arm/).
 
 
+## Custom Software
+
+Build process:
+
+Linux:
+```
+cmake -DFLYCAPTURE2_ROOT=/opt/flycapture2 ..
+```
+
+Windows:
+```
+cmake -DFLYCAPTURE2_ROOT="C:/Program Files/Point Grey Research/FlyCapture2" ..
+```
+
+
 ## Notes
 
 ```text
