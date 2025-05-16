@@ -58,34 +58,29 @@ endif()
 message(STATUS "Found FlyCapture2 library: ${FLYCAPTURE2_LIBRARY}")
 
 # ===================== GStreamer Setup =====================
-set(GSTREAMER_ROOT "" CACHE PATH "Path to GStreamer root directory")
 
-if(NOT GSTREAMER_ROOT)
-    if(WIN32)
+if(WIN32)
+    # On Windows: manual paths (you can keep this or adapt as needed)
+    set(GSTREAMER_ROOT "" CACHE PATH "Path to GStreamer root directory")
+    if(NOT GSTREAMER_ROOT)
         file(TO_CMAKE_PATH "$ENV{ProgramFiles}/gstreamer/1.0/msvc_x86_64" GSTREAMER_ROOT)
-    elseif(UNIX)
-        set(GSTREAMER_ROOT "/usr")
     endif()
+
+    set(GSTREAMER_INCLUDE_DIRS
+        "${GSTREAMER_ROOT}/include/gstreamer-1.0"
+        "${GSTREAMER_ROOT}/include"
+        "${GSTREAMER_ROOT}/include/glib-2.0"
+        "${GSTREAMER_ROOT}/lib/glib-2.0/include"
+    )
+    set(GSTREAMER_LIBRARY_DIRS "${GSTREAMER_ROOT}/lib")
+    set(GSTREAMER_LIBS
+        gstreamer-1.0
+        gstapp-1.0
+        gstbase-1.0
+        gobject-2.0
+        glib-2.0
+    )
 endif()
-
-set(GSTREAMER_INCLUDE_DIRS
-    "${GSTREAMER_ROOT}/include/gstreamer-1.0"
-    "${GSTREAMER_ROOT}/include"
-    "${GSTREAMER_ROOT}/include/glib-2.0"
-    "${GSTREAMER_ROOT}/lib/glib-2.0/include"
-)
-set(GSTREAMER_LIBRARY_DIRS "${GSTREAMER_ROOT}/lib")
-
-message(STATUS "GStreamer include dirs: ${GSTREAMER_INCLUDE_DIRS}")
-message(STATUS "GStreamer library dirs: ${GSTREAMER_LIBRARY_DIRS}")
-
-set(GSTREAMER_LIBS
-    gstreamer-1.0
-    gstapp-1.0
-    gstbase-1.0
-    gobject-2.0
-    glib-2.0
-)
 
 # ===================== Executable Setup =====================
 add_executable(Main
@@ -93,20 +88,53 @@ add_executable(Main
     stdafx.cpp
 )
 
-# Include directories
-target_include_directories(Main PRIVATE
-    ${GSTREAMER_INCLUDE_DIRS}
-    "${FLYCAPTURE2_INCLUDE_DIR}"
-)
+# FlyCapture2 includes and libs
+target_include_directories(Main PRIVATE "${FLYCAPTURE2_INCLUDE_DIR}")
+target_link_directories(Main PRIVATE "${FLYCAPTURE2_LIBRARY_DIR}")
 
-# Library directories
-target_link_directories(Main PRIVATE
-    ${GSTREAMER_LIBRARY_DIRS}
-    "${FLYCAPTURE2_LIBRARY_DIR}"
-)
+# Link FlyCapture2 lib
+target_link_libraries(Main PRIVATE "${FLYCAPTURE2_LIBRARY}")
 
-# Link libraries
-target_link_libraries(Main PRIVATE
-    ${GSTREAMER_LIBS}
-    "${FLYCAPTURE2_LIBRARY}"
-)
+# ===================== Unix pkg-config for GStreamer and GLib =====================
+if(UNIX)
+    find_package(PkgConfig REQUIRED)
+
+    # Find GLib
+    pkg_check_modules(GLIB REQUIRED glib-2.0)
+    message(STATUS "GLIB_INCLUDE_DIRS: ${GLIB_INCLUDE_DIRS}")
+
+    # Find GStreamer core, app, and base libs
+    pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+    pkg_check_modules(GSTREAMER_APP REQUIRED gstreamer-app-1.0)
+    pkg_check_modules(GSTREAMER_BASE REQUIRED gstreamer-base-1.0)
+
+    message(STATUS "GSTREAMER_INCLUDE_DIRS: ${GSTREAMER_INCLUDE_DIRS}")
+    message(STATUS "GSTREAMER_APP_INCLUDE_DIRS: ${GSTREAMER_APP_INCLUDE_DIRS}")
+    message(STATUS "GSTREAMER_BASE_INCLUDE_DIRS: ${GSTREAMER_BASE_INCLUDE_DIRS}")
+
+    # Combine include dirs
+    set(ALL_GSTREAMER_INCLUDE_DIRS
+        ${GSTREAMER_INCLUDE_DIRS}
+        ${GSTREAMER_APP_INCLUDE_DIRS}
+        ${GSTREAMER_BASE_INCLUDE_DIRS}
+        ${GLIB_INCLUDE_DIRS}
+    )
+
+    # Combine libs
+    set(ALL_GSTREAMER_LIBS
+        ${GSTREAMER_LIBRARIES}
+        ${GSTREAMER_APP_LIBRARIES}
+        ${GSTREAMER_BASE_LIBRARIES}
+        ${GLIB_LIBRARIES}
+    )
+
+    target_include_directories(Main PRIVATE ${ALL_GSTREAMER_INCLUDE_DIRS})
+    target_link_libraries(Main PRIVATE ${ALL_GSTREAMER_LIBS})
+endif()
+
+# ===================== Windows manual GStreamer includes/libs =====================
+if(WIN32)
+    target_include_directories(Main PRIVATE ${GSTREAMER_INCLUDE_DIRS})
+    target_link_directories(Main PRIVATE ${GSTREAMER_LIBRARY_DIRS})
+    target_link_libraries(Main PRIVATE ${GSTREAMER_LIBS})
+endif()

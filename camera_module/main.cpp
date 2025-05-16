@@ -47,20 +47,41 @@ int main(){
     Error error;
 
     // Gstreamer setup
+    int argc = 0;
+    char **argv = nullptr;
+    gst_init(&argc, &argv);
+    gst_debug_set_default_threshold(GST_LEVEL_WARNING);
     GError *gError = nullptr;
-    // GstElement *pipeline = gst_parse_launch(
-    //     "appsrc name=mysrc is-live=true block=true format=time "
-    //     "! videoconvert "
-    //     "! video/x-raw,format=GRAY8,width=1280,height=1024,framerate=150/1 "
-    //     "! jpegenc "
-    //     "! rtpjpegpay "
-    //     "! udpsink host=127.0.0.1 port=5000", &gError);
+    GstElement *pipeline = gst_parse_launch(
+        "appsrc name=mysrc format=time is-live=true "
+        "caps=video/x-raw,format=GRAY8,width=1280,height=1024,framerate=30/1 ! "
+        "queue ! videoconvert ! queue ! video/x-raw,format=I420 ! "
+        "x264enc tune=zerolatency speed-preset=veryslow bitrate=5000 key-int-max=30 ! "
+        "queue ! rtph264pay config-interval=1 pt=96 ! "
+        "queue ! udpsink host=127.0.0.1 port=5000",
+        nullptr);
 
-    // if (!pipeline) {
-    //     cerr << "Failed to create pipeline: " << (gError ? gError->message : "Unknown error") << endl;
-    //     if (gError) g_error_free(gError);
-    //     return -1;
-    // }
+
+    if (!pipeline) {
+        cerr << "Failed to create pipeline: " << (gError ? gError->message : "Unknown error") << endl;
+        if (gError) g_error_free(gError);
+        return -1;
+    }
+
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+
+    GstElement *appsrc = gst_bin_get_by_name(GST_BIN(pipeline), "mysrc");
+
+    // Set caps with the correct framerate
+    GstCaps *caps = gst_caps_new_simple("video/x-raw",
+        "format", G_TYPE_STRING, "GRAY8",
+        "width", G_TYPE_INT, 1280,
+        "height", G_TYPE_INT, 1024,
+        "framerate", GST_TYPE_FRACTION, 150, 1,
+        NULL);
+    gst_app_src_set_caps(GST_APP_SRC(appsrc), caps);
+    gst_caps_unref(caps);
+        
 
     // get camera
     BusManager busMgr;
@@ -127,6 +148,9 @@ int main(){
         return -1;
     }
 
+    static GstClockTime timestamp = 0;
+    const int fps = 150;
+    const GstClockTime duration = GST_SECOND / fps;
     while (true) {
         // Acquire Image
         Image rawImage;
@@ -134,60 +158,41 @@ int main(){
         if (error != PGRERROR_OK)
         {
             PrintError(error);
-            // continue;
             return -1;
         }
 
-        cout << "Grabbed image " << endl;
-
         // Create a converted image
         Image convertedImage;
-        // Convert the raw image
         error = rawImage.Convert(PIXEL_FORMAT_MONO8, &convertedImage);
-        if (error != PGRERROR_OK){
+        if (error != PGRERROR_OK) {
             PrintError(error);
             return -1;
         }
 
-        // // HERE WE PACKAGE AND SEND WITH GSTREAMER
-        // GstBuffer *buffer;
-        // GstFlowReturn ret;
+        // Package and send with GStreamer
+        GstBuffer *buffer;
+        GstFlowReturn ret;
+        unsigned int dataSize = 1280 * 1024;
+        unsigned char* data = convertedImage.GetData();
+        buffer = gst_buffer_new_allocate(NULL, dataSize, NULL);
+        gst_buffer_fill(buffer, 0, data, dataSize);
 
-        // unsigned int dataSize = convertedImage.GetDataSize();
-        // unsigned char* data = convertedImage.GetData();
+        // Set PTS and duration
+        GST_BUFFER_PTS(buffer) = timestamp;
+        GST_BUFFER_DURATION(buffer) = duration;
+        timestamp += duration;
 
-        // buffer = gst_buffer_new_allocate(NULL, dataSize, NULL);
-        // gst_buffer_fill(buffer, 0, data, dataSize);
-
-        // GstCaps *caps = gst_caps_new_simple("video/x-raw",
-        //     "format", G_TYPE_STRING, "GRAY8",
-        //     "width", G_TYPE_INT, convertedImage.GetCols(),
-        //     "height", G_TYPE_INT, convertedImage.GetRows(),
-        //     "framerate", GST_TYPE_FRACTION, 30, 1,
-        //     NULL);
-        // gst_app_src_set_caps(GST_APP_SRC(appsrc), caps);
-        // gst_caps_unref(caps);
-        
-        // GstMapInfo map;
-        // gst_buffer_map(buffer, &map, GST_MAP_WRITE);
-        // // Data already copied
-        // gst_buffer_unmap(buffer, &map);
-        
-        // GST_BUFFER_PTS(buffer) = gst_util_uint64_scale(gst_clock_get_time(gst_element_get_clock(pipeline)) - gst_element_get_base_time(pipeline), 1, GST_SECOND);
-        // GST_BUFFER_DURATION(buffer) = gst_util_uint64_scale(1, GST_SECOND, 30);
-        
-        // ret = gst_app_src_push_buffer(GST_APP_SRC(appsrc), buffer);
-        // if (ret != GST_FLOW_OK) {
-        //     cerr << "Error pushing buffer to GStreamer" << endl;
-        //     break;
-        // }
-
+        ret = gst_app_src_push_buffer(GST_APP_SRC(appsrc), buffer);
+        if (ret != GST_FLOW_OK) {
+            std::cerr << "Error pushing buffer to GStreamer" << std::endl;
+            break;
+        }
     }
 
-    // // Cleanup gst
-    // gst_element_set_state(pipeline, GST_STATE_NULL);
-    // gst_object_unref(appsrc);
-    // gst_object_unref(pipeline);
+    // Cleanup gst
+    gst_element_set_state(pipeline, GST_STATE_NULL);
+    gst_object_unref(appsrc);
+    gst_object_unref(pipeline);
 
     // Stop capturing images
     error = cam.StopCapture();

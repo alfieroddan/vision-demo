@@ -22,6 +22,7 @@ Then to install the SDK, follow [these steps](https://www.teledynevisionsolution
 
 - CMake
 - Gstreamer
+- GLib
 
 ## Build
 
@@ -36,7 +37,25 @@ Windows:
 cmake -DFLYCAPTURE2_ROOT="C:/Program Files/Point Grey Research/FlyCapture2" ..
 ```
 
+
+## Run
+
+```bash
+gst-launch-1.0 -v udpsrc port=5000 caps="application/x-rtp,media=video,encoding-name=H264,payload=96" \
+! rtph264depay \
+! avdec_h264 \
+! videoconvert \
+! autovideosink
+```
+
 ## Notes
 
 ```text
+
+For UNIX I had to install these three things for gst:
+1. sudo apt-get install glib2.0
+2. sudo apt-get install libgstreamer1.0-dev
+3. sudo apt-get install libgstreamer-plugins-base1.0-dev
+4. sudo apt install gstreamer1.0-plugins-ugly
+5. sudo apt install gstreamer1.0-libav
 ```
