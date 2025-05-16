@@ -1,5 +1,11 @@
 # Camera Module
 
+
+TODO:
+- Try RGB 8 instead of MONO 8
+- FPS is wrong
+- Improve gstreamer output, gotta be better than current
+
 ## Raspberry Pi + Flea 3 PointGrey
 
 ## Sofware
