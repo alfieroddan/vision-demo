@@ -33,5 +33,6 @@
 
 # Custom
 .vs
+.vscode
 out/
 build/

@@ -10,7 +10,9 @@ We used a [RPI](https://www.raspberrypi.com) since everyone has one, or somethin
 
 ### FlyCapture2 SDK
 
-For the camera software, you can use whatever your camera suits. We need [FlyCapture2](https://www.teledynevisionsolutions.com/en-gb/products/flycapture-sdk/) for arm64 linux. At the time of writing we download flycapture.2.13.3.31_arm64 (note it's not actually supported for Ubuntu 24, but it works).
+For the camera software, you can use whatever your camera suits. We have a point greay flea 3 so I will use this.
+
+We need [FlyCapture2](https://www.teledynevisionsolutions.com/en-gb/products/flycapture-sdk/) for arm64 linux. At the time of writing we download flycapture.2.13.3.31_arm64 (note it's not actually supported for Ubuntu 24, but it works).
 
 Then to install the SDK, follow [these steps](https://www.teledynevisionsolutions.com/en-gb/support/support-center/application-note/iis/getting-started-with-flycapture-2-and-arm/).
 
@@ -19,6 +21,9 @@ Then to install the SDK, follow [these steps](https://www.teledynevisionsolution
 ### Prerequisites
 
 - CMake
+- Gstreamer
+
+## Build
 
 Build process:
 Linux:
@@ -30,7 +35,6 @@ Windows:
 ```
 cmake -DFLYCAPTURE2_ROOT="C:/Program Files/Point Grey Research/FlyCapture2" ..
 ```
-
 
 ## Notes
 
