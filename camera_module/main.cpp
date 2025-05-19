@@ -54,7 +54,7 @@ int main(){
     GError *gError = nullptr;
     GstElement *pipeline = gst_parse_launch(
         "appsrc name=mysrc format=time is-live=true "
-        "caps=video/x-raw,format=GRAY8,width=1280,height=1024,framerate=30/1 ! "
+        "caps=video/x-raw,format=RGB8,width=1280,height=1024,framerate=30/1 ! "
         "queue ! videoconvert ! queue ! video/x-raw,format=I420 ! "
         "x264enc tune=zerolatency speed-preset=veryslow bitrate=5000 key-int-max=30 ! "
         "queue ! rtph264pay config-interval=1 pt=96 ! "
@@ -74,7 +74,7 @@ int main(){
 
     // Set caps with the correct framerate
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
-        "format", G_TYPE_STRING, "GRAY8",
+        "format", G_TYPE_STRING, "RGB8",
         "width", G_TYPE_INT, 1280,
         "height", G_TYPE_INT, 1024,
         "framerate", GST_TYPE_FRACTION, 150, 1,
@@ -163,7 +163,7 @@ int main(){
 
         // Create a converted image
         Image convertedImage;
-        error = rawImage.Convert(PIXEL_FORMAT_MONO8, &convertedImage);
+        error = rawImage.Convert(PIXEL_FORMAT_RGB8, &convertedImage);
         if (error != PGRERROR_OK) {
             PrintError(error);
             return -1;
@@ -172,7 +172,7 @@ int main(){
         // Package and send with GStreamer
         GstBuffer *buffer;
         GstFlowReturn ret;
-        unsigned int dataSize = 1280 * 1024;
+        unsigned int dataSize = 1280 * 1024 * 3;
         unsigned char* data = convertedImage.GetData();
         buffer = gst_buffer_new_allocate(NULL, dataSize, NULL);
         gst_buffer_fill(buffer, 0, data, dataSize);
