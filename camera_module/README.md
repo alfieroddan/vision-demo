@@ -5,6 +5,7 @@ TODO:
 - Try RGB 8 instead of MONO 8
 - FPS is wrong
 - Improve gstreamer output, gotta be better than current
+- https://github.com/bluenviron/mediamtx
 
 ## Raspberry Pi + Flea 3 PointGrey
 
