@@ -9,7 +9,7 @@ class InferenceWorker(QObject):
     @Slot(object)
     def run_inference(self, rgb_frame: np.ndarray):
         # Simulate inference delay
-        time.sleep(0.1)
+        time.sleep(0.01)
 
         height, width, channels = rgb_frame.shape
         if channels == 3:
