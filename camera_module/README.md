@@ -1,5 +1,21 @@
 # Camera Module
 
+gstreamer fake command:
+```
+gst-launch-1.0 -v \
+    videotestsrc is-live=true pattern=ball ! \
+    video/x-raw,width=1920,height=1080,framerate=30/1 ! \
+    x264enc tune=zerolatency bitrate=5000 speed-preset=superfast ! \
+    rtph264pay config-interval=1 pt=96 ! \
+    udpsink host=127.0.0.1 port=5000
+```
+gstreamer receiver command
+
+```
+gst-launch-1.0 -v \
+    udpsrc port=5000 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! \
+    rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
+```
 
 TODO:
 - Try RGB 8 instead of MONO 8
@@ -74,7 +90,7 @@ There are some really cool libraries and resources to help:
 - [learn ffmpeg the hard way](https://github.com/leandromoreira/ffmpeg-libav-tutorial?tab=readme-ov-file#video---what-you-see): good intuition behind what ffmpeg does and also just general media sharing
 - [simple ffmpeg streamer](https://github.com/leixiaohua1020/simplest_ffmpeg_streamer/): simple implemenation of ffmpeg c++
 
-ChatGPT summary:
+Summary:
 
 ```text
 - Discussed how transport layers like ZeroMQ, ROS2, and RTI DDS work for text and custom data (tensors, images).

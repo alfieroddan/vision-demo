@@ -3,19 +3,21 @@ import QtQuick.Controls 2.15
 
 ApplicationWindow {
     visible: true
-    width: 640
-    height: 480
+    width: 800
+    height: 600
     title: "Computer Vision: GUI"
 
-    Column {
-        anchors.centerIn: parent
-        spacing: 10
+    Image {
+        id: inferenceImage
+        objectName: "inferenceImage"
+        source: "image://frameprovider/current"
+        fillMode: Image.PreserveAspectFit
 
-        Label {
-            id: inferenceLabel
-            objectName: "inferenceLabel"
-            text: "Waiting for inference..."
-            font.pixelSize: 20
-        }
+        // Bind width and height dynamically to controller.imageSize
+        width: controller.imageSize.width
+        height: controller.imageSize.height
+
+        // Optional: limit max size to window size, preserve aspect ratio, etc.
+        // You can add anchors or maximum size limits here if needed
     }
 }

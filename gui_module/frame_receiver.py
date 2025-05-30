@@ -20,6 +20,7 @@ class FrameReceiver(QObject):
     def read_frame(self):
         ret, frame = self.cap.read()
         if ret:
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             self.frame_received.emit(frame)
 
     @Slot()
