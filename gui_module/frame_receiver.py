@@ -1,6 +1,7 @@
 from PySide6.QtCore import QObject, Signal, QTimer, Slot
 import cv2
 
+
 class FrameReceiver(QObject):
     # Emitting a frame (e.g., numpy array)
     frame_received = Signal(object)
