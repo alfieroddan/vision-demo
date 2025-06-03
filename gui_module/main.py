@@ -1,12 +1,13 @@
 import sys
 import time
-from PySide6.QtCore import Qt, QObject, Signal, Slot, Property, QSize, QThread
+from PySide6.QtCore import Qt, QObject, Signal, Slot, Property, QSize, QThread, QTimer
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtGui import QImage
 from PySide6.QtQuick import QQuickImageProvider
 from frame_receiver import FrameReceiver
 from inference_worker import InferenceWorker
+import utils
 
 
 class FrameProvider(QQuickImageProvider):
@@ -28,12 +29,46 @@ class FrameProvider(QQuickImageProvider):
 class Controller(QObject):
     imageSizeChanged = Signal()
     sourceUrlChanged = Signal()
+    deviceChanged = Signal()
+    fpsChanged = Signal()
 
     def __init__(self, frame_provider):
         super().__init__()
         self.frame_provider = frame_provider
         self._image_size = QSize(640, 480)
         self._source_url = "image://frameprovider/current"
+        self._device_name = ""
+        self._fps_str = "~"
+        self.fps_tracker = utils.FPSTracker(max_frames=50)
+
+        # Create QTimer
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_fps)
+        self.timer.start(10000)
+
+    @Property(str, notify=deviceChanged)
+    def device(self):
+        return self._device_name
+
+    @device.setter
+    def device(self, name: str):
+        if self._device_name != name:
+            self._device_name = name
+            self.deviceChanged.emit()
+
+    @Property(str, notify=fpsChanged)
+    def fps(self):
+        return self._fps_str
+
+    @fps.setter
+    def fps(self, fps: str):
+        if self._fps_str != fps:
+            self._fps_str = fps 
+            self.fpsChanged.emit()
+    
+    def update_fps(self):
+        fps = self.fps_tracker.compute_fps()
+        self.fps = str(round(fps))
 
     @Property(QSize, notify=imageSizeChanged)
     def imageSize(self):
@@ -57,6 +92,7 @@ class Controller(QObject):
 
     @Slot(QImage)
     def update_image(self, qimage: QImage):
+        self.fps_tracker.add_frame()
         self.frame_provider.update_image(qimage)
         self.imageSize = qimage.size()
         self.sourceUrl = f"image://frameprovider/current?{time.time()}"
@@ -83,6 +119,10 @@ def main():
     root_obj = engine.rootObjects()[0]
     controller.setParent(root_obj)
 
+    # Set device
+    ort_device = utils.get_best_available_provider()
+    controller.device = ort_device
+
     # Setup FrameReceiver in its own thread
     frame_thread = QThread()
     frame_receiver = FrameReceiver()
@@ -91,7 +131,7 @@ def main():
 
     # Setup InferenceWorker in its own thread
     inference_thread = QThread()
-    inference_worker = InferenceWorker()
+    inference_worker = InferenceWorker(ort_device=ort_device)
     inference_worker.moveToThread(inference_thread)
 
     # Start inference thread

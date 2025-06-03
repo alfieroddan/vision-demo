@@ -83,37 +83,22 @@ ApplicationWindow {
                             color: "#22c55e"
                         }
                         Text {
-                            text: "30 FPS"
+                            text: "FPS: " + controller.fps
                             font.pixelSize: 12
                             color: "#64748b"
                             font.weight: Font.Medium
                         }
                     }
-                    
+
                     // Device indicator
                     RowLayout {
                         spacing: 6
                         Text {
-                            text: "🖥️"
+                            text: "️⚙️"
                             font.pixelSize: 12
                         }
                         Text {
-                            text: "GPU: RTX 4080"
-                            font.pixelSize: 12
-                            color: "#64748b"
-                            font.weight: Font.Medium
-                        }
-                    }
-                    
-                    // CPU usage
-                    RowLayout {
-                        spacing: 6
-                        Text {
-                            text: "⚡"
-                            font.pixelSize: 12
-                        }
-                        Text {
-                            text: "CPU: 45%"
+                            text: "Device: " + controller.device
                             font.pixelSize: 12
                             color: "#64748b"
                             font.weight: Font.Medium
