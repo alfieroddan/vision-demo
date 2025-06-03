@@ -31,6 +31,9 @@ class Controller(QObject):
     sourceUrlChanged = Signal()
     deviceChanged = Signal()
     fpsChanged = Signal()
+    webcamDevicesChanged = Signal()
+    change_frame_provider = Signal("QVariantMap")
+    change_inference_runner = Signal(str)
 
     def __init__(self, frame_provider):
         super().__init__()
@@ -40,6 +43,7 @@ class Controller(QObject):
         self._device_name = ""
         self._fps_str = "~"
         self.fps_tracker = utils.FPSTracker(max_frames=50)
+        self._webcam_devices = ["0"]
 
         # Create QTimer
         self.timer = QTimer(self)
@@ -55,6 +59,16 @@ class Controller(QObject):
         if self._device_name != name:
             self._device_name = name
             self.deviceChanged.emit()
+
+    @Property(list, notify=webcamDevicesChanged)
+    def webcam_devices(self):
+        return self._webcam_devices
+
+    @webcam_devices.setter
+    def webcam_devices(self, devices: list):
+        if self._webcam_devices != devices:
+            self._webcam_devices = devices 
+            self.webcamDevicesChanged.emit()
 
     @Property(str, notify=fpsChanged)
     def fps(self):
@@ -96,6 +110,14 @@ class Controller(QObject):
         self.frame_provider.update_image(qimage)
         self.imageSize = qimage.size()
         self.sourceUrl = f"image://frameprovider/current?{time.time()}"
+    
+    @Slot("QVariantMap")
+    def on_frame_provider_selected(self, proivder_config):
+        self.change_frame_provider.emit(proivder_config)
+
+    @Slot(str)
+    def on_inference_runner_selected(self, name):
+        self.change_inference_runner.emit(name)
 
 
 def main():
@@ -120,8 +142,12 @@ def main():
     controller.setParent(root_obj)
 
     # Set device
-    ort_device = utils.get_best_available_provider()
+    ort_device = utils.get_best_available_onnx_provider()
     controller.device = ort_device
+
+    # probe availale devices
+    available_webcam_devices = utils.probe_video_devices(max_devices=4)
+    controller.webcam_devices = available_webcam_devices
 
     # Setup FrameReceiver in its own thread
     frame_thread = QThread()
@@ -140,6 +166,8 @@ def main():
     # Connect signals
     frame_receiver.frame_received.connect(inference_worker.run_inference)
     inference_worker.inference_done.connect(controller.update_image)
+    controller.change_frame_provider.connect(frame_receiver.set_provider)
+    controller.change_inference_runner.connect(inference_worker.set_inference_runner)
 
     # Start frame receiving
     frame_thread.start()

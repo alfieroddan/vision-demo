@@ -1,9 +1,10 @@
 import onnxruntime as ort
+import cv2
 from collections import deque
 import time
 
 
-def get_best_available_provider():
+def get_best_available_onnx_provider():
     """
     Just return a ORT provider 
     """
@@ -17,8 +18,22 @@ def get_best_available_provider():
     return providers[0] if providers else None
 
 
+def probe_video_devices(max_devices: int = 10):
+    available_devices = []
+    for i in range(max_devices):
+        cap = cv2.VideoCapture(i)
+        if cap is None or not cap.isOpened():
+            # device index i not available
+            continue
+        ret, _ = cap.read()
+        if ret:
+            available_devices.append(i)
+        cap.release()
+    return available_devices
+
+
 class FPSTracker:
-    def __init__(self, max_frames=50):
+    def __init__(self, max_frames: int = 50):
         """
         Initialize the FPSTracker with a fixed size deque to store timestamps.
         :param max_frames: Maximum number of recent frames to consider for FPS calculation.

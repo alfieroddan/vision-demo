@@ -167,7 +167,9 @@ ApplicationWindow {
                                         hoverEnabled: true
                                         onEntered: if (index !== 0) parent.color = hoverColor
                                         onExited: parent.color = index === 0 ? selectedColor : "transparent"
-                                        onClicked: console.log("Selected:", modelData.name)
+                                        onClicked: {
+                                            controller.on_inference_runner_selected(modelData.name)
+                                        }
                                     }
 
                                     RowLayout {
@@ -228,6 +230,7 @@ ApplicationWindow {
                                     checked: true
                                     ButtonGroup.group: sourceGroup
                                     Material.accent: accentColor
+                                    onToggled: if (checked) controller.on_frame_provider_selected({type: "webcam"})
                                     
                                     contentItem: Text {
                                         text: webcamRadio.text
@@ -260,9 +263,16 @@ ApplicationWindow {
 
                                         ComboBox {
                                             Layout.fillWidth: true
-                                            model: ["0", "1"]
+                                            model: controller.webcam_devices
                                             Material.accent: accentColor
-                                            
+                                            onCurrentIndexChanged: {
+                                                if (webcamRadio.checked) {
+                                                    controller.on_frame_provider_selected({
+                                                        "type": "webcam",
+                                                        "device_index": parseInt(model[currentIndex])
+                                                        })
+                                                    }
+                                            }
                                             contentItem: Text {
                                                 text: parent.displayText
                                                 font.pixelSize: 12
@@ -346,7 +356,10 @@ ApplicationWindow {
 
                                             onClicked: {
                                                 if (gstRadio.checked) {
-                                                    console.log("GStreamer string set:", gstreamerInput.text)
+                                                    controller.on_frame_provider_selected({
+                                                        "type": "gstreamer",
+                                                        "pipeline": gstreamerInput.text
+                                                    })
                                                 }
                                             }
                                         }
