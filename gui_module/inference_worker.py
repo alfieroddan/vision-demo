@@ -6,7 +6,6 @@ import onnxruntime as ort
 import warnings
 import yaml
 import cv2
-from typing import Tuple
 
 
 def to_uint8_image(frame: np.ndarray) -> np.ndarray:
@@ -123,7 +122,7 @@ class InferenceWorker(QObject):
     def set_inference_runner(self, runner_string: str):
         if runner_string == "Identity":
             self.inference_runner = IdentityInference(device=self.device)
-        elif runner_string == "Semantic Segmentation":
+        elif runner_string == "Object Detection":
             self.inference_runner = Yolo11n(device=self.device)
         else:
             warnings.warn(f"No inference with name: {runner_string}")

@@ -87,7 +87,7 @@ class FrameReceiver(QObject):
         # Create the timer inside the thread context
         self.timer = QTimer()
         self.timer.timeout.connect(self.read_frame)
-        self.timer.start(16)  # target ~60 fps
+        self.timer.start(10)
 
     def read_frame(self):
         ret, frame = self.provider.get_frame()
