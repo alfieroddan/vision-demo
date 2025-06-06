@@ -142,8 +142,8 @@ def main():
     controller.setParent(root_obj)
 
     # Set device
-    ort_device = utils.get_best_available_onnx_provider()
-    controller.device = ort_device
+    ort_devices = utils.get_best_available_onnx_provider()
+    controller.device = ort_devices[0]
 
     # probe availale devices
     available_webcam_devices = utils.probe_video_devices(max_devices=4)
@@ -157,7 +157,7 @@ def main():
 
     # Setup InferenceWorker in its own thread
     inference_thread = QThread()
-    inference_worker = InferenceWorker(ort_device=ort_device)
+    inference_worker = InferenceWorker(ort_device=ort_devices)
     inference_worker.moveToThread(inference_thread)
 
     # Start inference thread

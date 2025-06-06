@@ -13,6 +13,9 @@ ApplicationWindow {
     Material.accent: Material.Teal
     Material.primary: Material.BlueGrey
 
+    // Track selected task index
+    property int selectedTaskIndex: 0
+
     // Adaptive color properties
     readonly property color surfaceColor: Material.theme === Material.Dark ? "#1e1e1e" : "#ffffff"
     readonly property color surfaceVariantColor: Material.theme === Material.Dark ? "#2d2d2d" : "#f5f5f5"
@@ -150,25 +153,28 @@ ApplicationWindow {
 
                             Repeater {
                                 model: [
-                                    {icon: "🖼️", name: "Semantic Segmentation", desc: "Pixel-level segmentation"}
+                                    {icon: "▶️", name: "Identity", desc: "Simple Identity ONNX Model"},
+                                    {icon: "️🎯", name: "Object Detection", desc: "YOLO11n Object detection"}
                                 ]
 
                                 Rectangle {
                                     Layout.fillWidth: true
                                     height: 70
-                                    color: index === 0 ? selectedColor : "transparent"
-                                    border.color: index === 0 ? accentColor : borderColor
-                                    border.width: index === 0 ? 2 : 1
+                                    color: index === selectedTaskIndex ? selectedColor : "transparent"
+                                    border.color: index === selectedTaskIndex ? accentColor : borderColor
+                                    border.width: index === selectedTaskIndex ? 2 : 1
                                     radius: 8
 
                                     MouseArea {
                                         id: taskMouseArea
                                         anchors.fill: parent
                                         hoverEnabled: true
-                                        onEntered: if (index !== 0) parent.color = hoverColor
-                                        onExited: parent.color = index === 0 ? selectedColor : "transparent"
+                                        onEntered: if (index !== selectedTaskIndex) parent.color = hoverColor
+                                        onExited: parent.color = index === selectedTaskIndex ? selectedColor : "transparent"
                                         onClicked: {
+                                            selectedTaskIndex = index
                                             controller.on_inference_runner_selected(modelData.name)
+                                            console.log("Selected task:", modelData.name)
                                         }
                                     }
 
@@ -201,6 +207,66 @@ ApplicationWindow {
                                                 Layout.fillWidth: true
                                             }
                                         }
+
+                                        Item { Layout.fillWidth: true }
+
+                                        // Selection indicator
+                                        Rectangle {
+                                            Layout.preferredWidth: 16
+                                            Layout.preferredHeight: 16
+                                            radius: 8
+                                            color: index === selectedTaskIndex ? accentColor : "transparent"
+                                            border.color: index === selectedTaskIndex ? accentColor : borderColor
+                                            border.width: 1
+                                            Layout.alignment: Qt.AlignVCenter
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "✓"
+                                                color: "white"
+                                                font.pixelSize: 10
+                                                font.weight: Font.Bold
+                                                visible: index === selectedTaskIndex
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Current selection display
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 40
+                                color: surfaceVariantColor
+                                border.color: borderColor
+                                border.width: 1
+                                radius: 6
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: 12
+                                    spacing: 8
+
+                                    Text {
+                                        text: "Active:"
+                                        font.pixelSize: 12
+                                        color: secondaryTextColor
+                                    }
+
+                                    Text {
+                                        text: selectedTaskIndex === 0 ? "Identity" : "Semantic Segmentation"
+                                        font.pixelSize: 12
+                                        font.weight: Font.Medium
+                                        color: accentColor
+                                    }
+
+                                    Item { Layout.fillWidth: true }
+
+                                    Rectangle {
+                                        width: 6
+                                        height: 6
+                                        radius: 3
+                                        color: successColor
                                     }
                                 }
                             }
@@ -294,6 +360,10 @@ ApplicationWindow {
                                     text: "GStreamer"
                                     ButtonGroup.group: sourceGroup
                                     Material.accent: accentColor
+                                    onToggled: if (checked) {
+                                        // Clear any previous pipeline when switching to GStreamer
+                                        gstreamerInput.text = ""
+                                    }
                                     
                                     contentItem: Text {
                                         text: gstRadio.text
@@ -355,11 +425,12 @@ ApplicationWindow {
                                             }
 
                                             onClicked: {
-                                                if (gstRadio.checked) {
+                                                if (gstRadio.checked && gstreamerInput.text.length > 0) {
                                                     controller.on_frame_provider_selected({
                                                         "type": "gstreamer",
                                                         "pipeline": gstreamerInput.text
                                                     })
+                                                    console.log("GStreamer pipeline set:", gstreamerInput.text)
                                                 }
                                             }
                                         }
@@ -389,7 +460,7 @@ ApplicationWindow {
                         Layout.fillWidth: true
 
                         Text {
-                            text: "📹 Live Feed"
+                            text: "📹 Live Feed - " + (selectedTaskIndex === 0 ? "Identity" : "Semantic Segmentation")
                             font.pixelSize: 14
                             font.weight: Font.Medium
                             color: primaryTextColor
@@ -462,6 +533,13 @@ ApplicationWindow {
                                         text: "Waiting for video feed..."
                                         font.pixelSize: 12
                                         color: secondaryTextColor
+                                        Layout.alignment: Qt.AlignHCenter
+                                    }
+
+                                    Text {
+                                        text: "Active: " + (selectedTaskIndex === 0 ? "Identity Model" : "Semantic Segmentation")
+                                        font.pixelSize: 10
+                                        color: accentColor
                                         Layout.alignment: Qt.AlignHCenter
                                     }
                                 }

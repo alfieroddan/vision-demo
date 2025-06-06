@@ -11,11 +11,12 @@ def get_best_available_onnx_provider():
     providers = ort.get_available_providers()
     preferred_order = ['CUDAExecutionProvider', 'CoreMLExecutionProvider', 'CPUExecutionProvider']
 
+    available_providers = []
     for provider in preferred_order:
         if provider in providers:
-            return provider
+            available_providers.append(provider)
     # Fallback if none found (very unlikely)
-    return providers[0] if providers else None
+    return available_providers
 
 
 def probe_video_devices(max_devices: int = 10):
