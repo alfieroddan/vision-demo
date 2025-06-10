@@ -9,7 +9,7 @@ Simple vision demo with GUI.
 - [x] Create nice GUI with easy plug and play components
 - [x] Simple off the shelf ONNX model
 - [x] GUI must connect with embedded over network and local webcam(s)
-- [ ] Example with embedded over network
+- [x] Example with embedded over network
 
 ## Installation
 
