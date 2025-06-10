@@ -60,7 +60,6 @@ Windows:
 cmake -DFLYCAPTURE2_ROOT="C:/Program Files/Point Grey Research/FlyCapture2" ..
 ```
 
-
 ## Run
 
 ```bash
