@@ -36,7 +36,9 @@ As a fun example, the MacOS OpenCV easily connects with the Iphone as a continui
 
 This is an example video shot with Iphone.
 
-![iphone pedestrian example mp4](assets/pedestrian_iphone.mp4)
+(Slow framerate as it's a GIF)
+
+![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
 
 
 ## Extending
