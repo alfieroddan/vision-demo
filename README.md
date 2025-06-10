@@ -29,6 +29,8 @@ python main.py
 
 ## Examples
 
+![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
+
 ### Iphone 12 Mini
 As a fun example, the MacOS OpenCV easily connects with the Iphone as a continuity cameras.
 
@@ -36,14 +38,26 @@ This is an example video shot with Iphone.
 
 (Slow framerate and bad quality as it's a GIF, promise it's 1080p 30 FPS :sweat:)
 
-![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
 
 ### RPI and Pointgrey
+![person with point grey](assets/person_pointgrey.gif)
 
-This is an embedded application. We generate our own C++ code which utilizes gstreamer.
+This is an embedded application. We use our own C++ code which utilizes gstreamer.
 
-To install the hardware, see [camera_module](./camera_module/README.md)
+To install the hardware and code, see [camera_module](./camera_module/README.md)
 
+```bash
+./Main port host
+```
+i.e
+```bash
+./Main 192.268.xx 5000
+```
+
+To receive frames in GUI:
+```bash
+udpsrc port=5000 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=BGR ! appsink
+```
 
 ## Extending
 

@@ -62,6 +62,12 @@ gst-launch-1.0 -v \
     rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
 ```
 
+or for the gui:
+
+```
+udpsrc port=5100 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=BGR ! appsink
+```
+
 ## Notes
 
 ```text

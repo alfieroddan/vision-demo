@@ -5,8 +5,8 @@ import QtQuick.Controls.Material 2.15
 
 ApplicationWindow {
     visible: true
-    width: Screen.width * 0.9
-    height: Screen.height * 0.9
+    width:  1200
+    height: 800
     title: "Computer Vision Demo"
 
     Material.theme: Material.System
