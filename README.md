@@ -17,11 +17,9 @@ Simple vision demo with GUI.
 pip install -r requirements.txt
 ```
 
-*Note* To use the GStreamer with OpenCV, you have to install the gstreamer enabled OpenCV with Python. I've left this as an extra step if you are inclined.
-
-OpenCV Gstreamer help:
-- [MacOS](https://gist.github.com/liviaerxin/6ee3d4faea1614o72e621d81d0e114c8)
-- [Linux](https://github.com/opencv/opencv-python/issues/530)
+> **_NOTE:_** To use the GStreamer with OpenCV, you have to install the gstreamer enabled OpenCV with Python. I've left this as an extra step if you are inclined. OpenCV Gstreamer help:
+    [MacOS](https://gist.github.com/liviaerxin/6ee3d4faea1614572e621d81d0e114c8)
+    [Linux](https://github.com/opencv/opencv-python/issues/530).
 
 ## run
 
@@ -36,9 +34,15 @@ As a fun example, the MacOS OpenCV easily connects with the Iphone as a continui
 
 This is an example video shot with Iphone.
 
-(Slow framerate as it's a GIF)
+(Slow framerate and bad quality as it's a GIF, promise it's 1080p 30 FPS :sweat:)
 
 ![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
+
+### RPI and Pointgrey
+
+This is an embedded application. We generate our own C++ code which utilizes gstreamer.
+
+To install the hardware, see [camera_module](./camera_module/README.md)
 
 
 ## Extending

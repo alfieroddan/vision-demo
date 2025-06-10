@@ -42,8 +42,6 @@ static void PrintCameraInfo(CameraInfo *pCamInfo)
 
 static void PrintError(Error error) { error.PrintErrorTrace(); }
 
-// Option 1: UDP streaming with lossless x264
-// Receiver command: gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp" ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
 GstElement *create_udp_lossless_pipeline(const string& host, int port) {
     ostringstream pipeline_str;
     pipeline_str << "appsrc name=mysrc format=time is-live=true "
@@ -51,48 +49,6 @@ GstElement *create_udp_lossless_pipeline(const string& host, int port) {
                  << "videoconvert ! "
                  << "x264enc tune=zerolatency speed-preset=ultrafast ! "
                  << "rtph264pay config-interval=1 ! "
-                 << "udpsink host=" << host << " port=" << port;
-    
-    return gst_parse_launch(pipeline_str.str().c_str(), nullptr);
-}
-
-// Option 2: TCP streaming with lossless x264
-// Receiver command: gst-launch-1.0 tcpclientsrc host=YOUR_SERVER_IP port=5000 ! tsdemux ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
-GstElement *create_tcp_lossless_pipeline(int port) {
-    ostringstream pipeline_str;
-    pipeline_str << "appsrc name=mysrc format=time is-live=true "
-                 << "caps=video/x-raw,format=GRAY8,width=1280,height=1024,framerate=30/1 ! "
-                 << "videoconvert ! "
-                 << "x264enc tune=zerolatency ! "
-                 << "h264parse ! "
-                 << "mpegtsmux ! "
-                 << "tcpserversink host=0.0.0.0 port=" << port;
-    
-    return gst_parse_launch(pipeline_str.str().c_str(), nullptr);
-}
-
-// Option 3: File recording with lossless x264
-// View file: ffplay output.mp4 or vlc output.mp4
-GstElement *create_file_lossless_pipeline(const string& filename) {
-    ostringstream pipeline_str;
-    pipeline_str << "appsrc name=mysrc format=time is-live=true "
-                 << "caps=video/x-raw,format=GRAY8,width=1280,height=1024,framerate=30/1 ! "
-                 << "videoconvert ! "
-                 << "x264enc tune=zerolatency ! "
-                 << "mp4mux ! "
-                 << "filesink location=" << filename;
-    
-    return gst_parse_launch(pipeline_str.str().c_str(), nullptr);
-}
-
-// Option 4: Raw UDP streaming (no compression)
-// Receiver command: gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp,media=video,clock-rate=90000,encoding-name=RAW,sampling=YCbCr-4:2:0,depth=8,width=1280,height=1024" ! rtpvrawdepay ! videoconvert ! autovideosink
-GstElement *create_raw_udp_pipeline(const string& host, int port) {
-    ostringstream pipeline_str;
-    pipeline_str << "appsrc name=mysrc format=time is-live=true "
-                 << "caps=video/x-raw,format=GRAY8,width=1280,height=1024,framerate=30/1 ! "
-                 << "videoconvert ! "
-                 << "rtpvrawpay ! "
                  << "udpsink host=" << host << " port=" << port;
     
     return gst_parse_launch(pipeline_str.str().c_str(), nullptr);
@@ -108,21 +64,25 @@ int main(){
     char **argv = nullptr;
     gst_init(&argc, &argv);
     gst_debug_set_default_threshold(GST_LEVEL_WARNING);
+
+    // Default host and port
+    string host = "127.0.0.1";
+    int port = 5000;
+
+    // Parse command line arguments for host and port
+    // Usage example: ./your_program 192.168.1.42 6000
+    if (argc > 1) {
+        host = argv[1];
+    }
+    if (argc > 2) {
+        port = stoi(argv[2]);
+    }
+
+    cout << "Using host: " << host << ", port: " << port << endl;
     
-    // Choose your pipeline here:
-    
-    // Option 1: UDP streaming
+    // UDP streaming
     GstElement *pipeline = create_udp_lossless_pipeline("127.0.0.1", 5000);
     
-    // Option 2: TCP streaming
-    // GstElement *pipeline = create_tcp_lossless_pipeline(5000);
-    
-    // Option 3: File recording (default)
-    // GstElement *pipeline = create_file_lossless_pipeline("output_lossless.mp4");
-    
-    // Option 4: Raw UDP streaming (largest bandwidth but truly lossless)
-    // GstElement *pipeline = create_raw_udp_pipeline("192.168.1.100", 5000);
-
     if (!pipeline) {
         cerr << "Failed to create pipeline" << endl;
         return -1;

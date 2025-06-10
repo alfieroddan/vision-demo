@@ -1,28 +1,5 @@
 # Camera Module
 
-gstreamer fake command:
-```
-gst-launch-1.0 -v \
-    videotestsrc is-live=true pattern=ball ! \
-    video/x-raw,width=1920,height=1080,framerate=30/1 ! \
-    x264enc tune=zerolatency bitrate=5000 speed-preset=superfast ! \
-    rtph264pay config-interval=1 pt=96 ! \
-    udpsink host=127.0.0.1 port=5000
-```
-gstreamer receiver command
-
-```
-gst-launch-1.0 -v \
-    udpsrc port=5000 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! \
-    rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
-```
-
-TODO:
-- Try RGB 8 instead of MONO 8
-- FPS is wrong
-- Improve gstreamer output, gotta be better than current
-- https://github.com/bluenviron/mediamtx
-
 ## Raspberry Pi + Flea 3 PointGrey
 
 ## Sofware
@@ -50,24 +27,39 @@ Then to install the SDK, follow [these steps](https://www.teledynevisionsolution
 ## Build
 
 Build process:
-Linux:
-```
-cmake -DFLYCAPTURE2_ROOT=/home/tay/Documents/flycapture.2.13.3.31_arm64 ..
-```
 
-Windows:
-```
-cmake -DFLYCAPTURE2_ROOT="C:/Program Files/Point Grey Research/FlyCapture2" ..
+```bash
+cmake -DFLYCAPTURE2_ROOT=<path/to/flycapture_arm64> ..
+i.e
+cmake -DFLYCAPTURE2_ROOT=/home/tay/Documents/flycapture.2.13.3.31_arm64 ..
 ```
 
 ## Run
 
 ```bash
-gst-launch-1.0 -v udpsrc port=5000 caps="application/x-rtp,media=video,encoding-name=H264,payload=96" \
-! rtph264depay \
-! avdec_h264 \
-! videoconvert \
-! autovideosink
+./main 192.168.1.42 6000
+```
+
+
+## Helpful
+
+Gstreamer fake command:
+```bash
+HOST=192.128.xxxxx
+gst-launch-1.0 -v \
+  videotestsrc is-live=true pattern=ball ! \
+  video/x-raw,width=854,height=480,framerate=30/1 ! \
+  x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast ! \
+  rtph264pay config-interval=1 pt=96 ! \
+  udpsink host=$HOST port=5000
+
+```
+gstreamer receiver command
+
+```bash
+gst-launch-1.0 -v \
+    udpsrc port=5000 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! \
+    rtph264depay ! avdec_h264 ! videoconvert ! autovideosink sync=false
 ```
 
 ## Notes
@@ -88,22 +80,3 @@ There are some really cool libraries and resources to help:
 - [mediamtx](https://github.com/bluenviron/mediamtx?tab=readme-ov-file#generic-webcam): basically a server that runs extremely efficiently, grabs whatever you send it and converts it to some useful formats.
 - [learn ffmpeg the hard way](https://github.com/leandromoreira/ffmpeg-libav-tutorial?tab=readme-ov-file#video---what-you-see): good intuition behind what ffmpeg does and also just general media sharing
 - [simple ffmpeg streamer](https://github.com/leixiaohua1020/simplest_ffmpeg_streamer/): simple implemenation of ffmpeg c++
-
-Summary:
-
-```text
-- Discussed how transport layers like ZeroMQ, ROS2, and RTI DDS work for text and custom data (tensors, images).
-- DDS provides structured, real-time, reliable pub/sub communication with QoS, zero-copy shared memory locally; ZeroMQ handles raw messages but needs framing; ROS2 uses DDS internally.
-- DDS is suited for local real-time structured data exchange; GStreamer and ffmpeg are specialized for media streaming with codecs and compression over networks.
-- DDS is best for robotics/control data, while GStreamer/ffmpeg excel at video/audio streaming.
-- Shared memory IPC on the same device can be done using Python `multiprocessing.shared_memory` or C++ `shm_open`; network communication requires protocols like DDS or ZeroMQ.
-- Consumer detection of new frames: via signaling (sequence numbers, semaphores) in shared memory or subscriber callbacks in DDS/ZeroMQ.
-- Transferring a 12 MB uncompressed file over a 1 Gbps LAN takes roughly 100 ms; DDS adds some overhead; TCP is reliable but can add retransmission delays; shared memory transport is much faster locally.
-- Over WiFi, TCP/IP streaming raw bytes is generally the best reliable method for RGB frame transfer on embedded devices.
-- Clarified that GStreamer/ffmpeg are not replacements for DDS in structured data transport but are ideal for video/audio streaming.
-- Use case: streaming 1280p RGB frames from Raspberry Pi with a custom C++ SDK to a laptop GUI.
-- Recommended compressing frames (JPEG or hardware H264) before sending over TCP/UDP to handle WiFi bandwidth constraints.
-- GStreamer with hardware-accelerated encoding offers low latency and bandwidth-efficient streaming.
-- Raw RGB TCP streaming is simplest but bandwidth-heavy and less practical at 30 FPS over WiFi.
-- Offered assistance with example implementations: JPEG + TCP streaming or GStreamer pipelines.
-```
