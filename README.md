@@ -29,16 +29,6 @@ python main.py
 
 ## Examples
 
-![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
-
-### Iphone 12 Mini
-As a fun example, the MacOS OpenCV easily connects with the Iphone as a continuity cameras.
-
-This is an example video shot with Iphone.
-
-(Slow framerate and bad quality as it's a GIF, promise it's 1080p 30 FPS :sweat:)
-
-
 ### RPI and Pointgrey
 ![person with point grey](assets/person_pointgrey.gif)
 
@@ -58,6 +48,16 @@ To receive frames in GUI:
 ```bash
 udpsrc port=5000 caps="application/x-rtp, media=(string)video, encoding-name=(string)H264, payload=96, clock-rate=90000" ! rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=BGR ! appsink
 ```
+
+### Iphone 12 Mini
+
+![iphone pedestrian example gif](assets/pedestrian_iphone.gif)
+
+As a fun example, the MacOS OpenCV easily connects with the Iphone as a continuity cameras.
+
+This is an example video shot with Iphone.
+
+(Slow framerate and bad quality as it's a GIF, promise it's 1080p 30 FPS :sweat:)
 
 ## Extending
 
